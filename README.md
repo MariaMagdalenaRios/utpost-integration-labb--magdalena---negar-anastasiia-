@@ -51,6 +51,12 @@ npm run dev:client                    # Vue-klienten på :3001 med hot reload, /
     npm run mongo:smoke [id]  # skriver en tur ur Postgres som ett dokument i MongoDB och läser tillbaka
     npm run migrate:logs      # alla turer med mätpunkter → MongoDB, med kontroll av antalet (M5)
 
+## Mätning före/efter (M5)
+
+| Fråga | Före (M4) | Efter (utgångsläget) |
+|-------|-----------|----------------------|
+| query Turer | 51 | 2 |
+
 ## Images
 
 Pipelinen (jobbet *Image* i `.github/workflows/ci.yml`) bygger `api` och `client` på varje PR och publicerar dem i GHCR vid merge till `main`, taggade med commitens sha:

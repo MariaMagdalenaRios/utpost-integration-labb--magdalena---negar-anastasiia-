@@ -8,6 +8,8 @@
 flowchart LR
   B[branch + commit] --> PR[pull request mot main]
   PR --> Q[Kvalitet<br/>npm ci · lint · format:check · test]
+  PR --> I[Integration<br/>postgres + mongo som services · seed · migrate:logs · test:api]
+  I --> S
   PR --> BU[Bygg<br/>npm ci · build → artefakt]
   Q --> S{status checks<br/>gröna?}
   BU --> S
@@ -24,6 +26,7 @@ flowchart LR
 | Format | `npm run format:check` (Prettier, bara kontroll) | filer som inte kördes genom Prettier – ändrar inget i CI, det gör man lokalt | ~2 s |
 | Test | `npm test` (`vitest run`) | ett röktest på guidevyn den här veckan (M1) – riktiga tester i M2 | ~3 s |
 | Bygg | `npm run build` (`vite build` av `client/`) | importfel, trasiga templates, allt som bara syns vid bygge | ~2 s |
+| Integration (M5) | `npm run test:api` mot Postgres och Mongo som *services* | resolvers som inte stämmer med databasen, N+1 som kommit tillbaka, mutationer utan inloggningskrav – det klientens mockade tester aldrig ser | ~522 ms inkl. start av databaserna |
 
 `npm ci` (~25 s) dominerar – den installerar alla tre workspaces inklusive React-klientens beroenden. När `web/` tas bort (M6) halveras tiden.
 
@@ -33,9 +36,11 @@ flowchart LR
 - Kräver status checks **Kvalitet** och **Bygg** gröna innan merge
 - Kräver att branchen är uppdaterad mot `main` före merge (annars testas en kod som aldrig kommer att finnas)
 - Gäller även admins
+- Kräver status checks **Kvalitet**, **Bygg**, **Integration** och **Image** gröna innan merge
 
 ## Vanliga fel vi sett
 
 - **Grönt lokalt, rött i CI:** `npm run lint` lokalt är samma kommando som i CI. Kör det innan du pushar. Skillnaden brukar vara en fil som inte är sparad, eller `--fix` lokalt som gömde felet.
 - **`format:check` rött:** kör `npm run format --workspace=client` och committa. CI ska aldrig ändra kod, bara säga nej.
 - **Status check heter fel i rulesetet:** namnet är jobbets `name:` (Kvalitet, Bygg) – inte filnamnet.
+- **Integration rött men testerna gröna lokalt:** databasen i jobbet är tom tills `npm run seed` körts, och `Tour.logs` läser Mongo – `npm run migrate:logs` måste också ha körts. Portarna är `5432`/`27017` på `localhost` i jobbet, inte `5433` som i compose.
